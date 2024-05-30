@@ -1,0 +1,50 @@
+﻿@model PromotionsViewModel
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@{
+    ViewData["Title"] = "Liste des promotions " + (Model.ProduitID != 0 ? " affectées au produit " + Model.ProduitID : "");
+
+}
+<div class="text-center">
+    <h1 class="display-4">Mercadona</h1>
+    <p>@ViewData["Title"]</p>
+    <hr />
+</div>
+    
+    <form asp-action="ListePromotions" method="post">
+
+    <div class="d-flex mb-2">
+        <div class="mr-auto">
+            <button type="submit">Enregistrer les promotions sur le produit</button>
+        </div>
+        <div>
+            <a asp-controller="Home" asp-action="PromotionForm">Ajouter une promotion</a>
+
+        </div>
+    </div>
+
+    <input type="hidden" asp-for="@Model.ProduitID" readonly class="form-control" />
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col">Période</th>
+                    <th scope="col">Remise</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+        
+            @for (int i = 0; i < Model.PromotionsProduit.Count; i++)
+            {
+                <tr>
+
+                    <td><input type="checkbox" asp-for="@Model.PromotionsProduit[i].Affectee" /></td>
+                    <td><a asp-area="" asp-controller="Home" asp-action="PromotionForm" asp-route-id="@Model.PromotionsProduit[i].Promotion.PromotionID">du @Model.PromotionsProduit[i].Promotion.DateDebut.ToString("dd MMM yyyy") au @Model.PromotionsProduit[i].Promotion.DateFin.ToString("dd MMM yyyy")</a></td>
+                    <td>@Model.PromotionsProduit[i].Promotion.Remise.ToString("G") %</td>
+                    <td><input type="hidden" asp-for="@Model.PromotionsProduit[i].Promotion.PromotionID" class="form-control" /></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </form>

@@ -1,0 +1,58 @@
+﻿@model Produit
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = (Model == null ? "Nouveau produit" : "Détail du produit " + Model.Libelle);
+
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Formulaire</title>
+</head>
+<body>
+
+    <div class="text-center">
+        <h1 class="display-5">Mercadona</h1>
+        <p>@(Model == null ? "Nouveau produit" : "Détail du produit " + Model.Libelle)</p>
+        <hr />
+    </div>
+
+    <form asp-action="ProduitForm" method="post" class="m-2">
+        <input type="hidden" asp-for="ProduitID" readonly class="form-control" value=@(Model==null ? 0 :@Model.ProduitID) />
+        <div class="form-group">
+            @Html.LabelFor(m => m.Libelle)
+            @Html.TextBoxFor(m => m.Libelle,new { @class = "form-control"})
+            @Html.ValidationMessageFor(m => m.Libelle, "", new { @class = "text-danger" })
+        </div>
+        
+        <div class="form-group">
+            @Html.LabelFor(m => m.Description)
+            @Html.TextAreaFor(m => m.Description, new { @class = "form-control", @rows="5" })
+            
+        </div>
+        <div class="form-group">
+            
+            @Html.LabelFor(m => m.Prix)
+            <input type="number" asp-for="Prix" class="form-control" value=@(Model==null ? "" : Model.Prix.ToString("F").Replace(",",".")) />
+            
+            @Html.ValidationMessageFor(m => m.Prix, "", new { @class = "text-danger" })
+            
+        </div>
+        <div class="form-group">
+
+            @Html.LabelFor(m => m.Categorie)
+            @Html.TextBoxFor(m => m.Categorie,new { @class = "form-control"})
+            @Html.ValidationMessageFor(m => m.Categorie, "", new { @class = "text-danger" })
+            
+        </div>
+
+        <button type="submit">Enregistrer le produit</button>
+    </form>
+    <div asp-validation-summary="All"></div>
+</body>
+
+</html>
+
+

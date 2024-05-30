@@ -1,0 +1,46 @@
+﻿@model Promotion
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = (Model == null ? "Nouvelle promotion" : "Détail de la promotion du "+Model.DateDebut.ToString("dd MMM yyyy")+" au "+Model.DateFin.ToString("dd MMM yyyy"));
+
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Formulaire</title>
+</head>
+<body>
+
+    <div class="text-center">
+        <h1 class="display-5">Mercadona</h1>
+        <p>@ViewData["Title"]</p>
+        <hr />
+    </div>
+
+    <form asp-action="PromotionForm" method="post" class="m-2">
+        <input type="hidden" asp-for="PromotionID" readonly class="form-control" value=@(Model==null ? 0 :@Model.PromotionID) />
+        <div class ="form-group">
+            @Html.LabelFor(m => m.DateDebut)
+            <input type="date" asp-for="DateDebut" class="form-control" value=@(Model==null ? "" :@Model.DateDebut.ToString("yyyy-MM-dd")) />
+			@Html.ValidationMessageFor(m => m.DateDebut, "", new { @class = "text-danger" })
+
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(m => m.DateFin)
+            <input type="date" asp-for="DateFin" class="form-control" value=@(Model==null ? "" :@Model.DateFin.ToString("yyyy-MM-dd")) />
+            @Html.ValidationMessageFor(m => m.DateFin, "", new { @class = "text-danger" })
+
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(m => m.Remise)
+            <input type="number" asp-for="Remise" class="form-control" />
+            @Html.ValidationMessageFor(m => m.Remise, "", new { @class = "text-danger" })
+        </div>
+
+        <button type="submit">Enregistrer la promotion</button>
+    </form>
+    <div asp-validation-summary="All"></div>
+</body>
+</html>

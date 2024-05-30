@@ -1,0 +1,32 @@
+﻿@model IdentityUser
+@using Microsoft.AspNetCore.Identity
+
+@{
+    ViewData["Title"] = "Page d'accueil";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Bienvenue sur Mercadona</h1>
+
+	
+</div>
+<div class="text-center">
+	
+	@if (Model == null)
+    {
+        <div class="alert alert-warning">
+            <p>L'utilisateur avec un role d'administrateur n'a pas été créé</p>
+            <a class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hoverk" href="Identity/Account/Register/Administrateur">Créer l'utilisateur Administrateur</a>
+        </div>
+    }
+    else
+    {
+
+        <div class="alert alert-primary">
+
+            <p>L'utilisateur avec un rôle d'administrateur est @Model.Email</p>
+        </div>
+
+    }
+</div>
+

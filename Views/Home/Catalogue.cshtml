@@ -1,0 +1,91 @@
+﻿@model CatalogueViewModel
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@{
+    ViewData["Title"] = "Catalogue";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Mercadona</h1>
+    <p>Liste des produits</p>
+    <hr />
+</div>
+<div class="m-2">
+    
+    @if (Model == null || Model.Produits.Count == 0)
+    {
+        <h3>Aucun article disponible.</h3>
+        @if (SignInManager.IsSignedIn(User) && User.IsInRole("Administrateur"))
+        {
+            <a asp-controller="Home" asp-action="ImporteProduits">Importer les produits</a>
+        }
+        
+     }
+     else
+    {
+
+        var options = Model.ListeCategories;
+        <div  class="d-flex mb-2">
+            <div class="mr-auto">
+                <label>Filtre : 
+                @Html.DropDownList("Categories", options ,"--Choisir une catégorie--",new { @onchange = "window.location.href = '/Home/Catalogue/'+this.options[this.selectedIndex].value" })
+                </label>
+            </div>
+            <div>
+                @if (SignInManager.IsSignedIn(User) && User.IsInRole("Administrateur"))
+                {
+
+                    <a asp-controller="Home" asp-action="ProduitForm">Ajouter un produit</a>
+                }
+            </div>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Nom du produit</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Prix</th>
+                    <th scope="col">Catégorie</th>
+                    @if (SignInManager.IsSignedIn(User) && User.IsInRole("Administrateur"))
+                    {
+                        <th scope="col">Promotion</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Produit produit in Model.Produits)
+                {
+                    var promotionEnVigueur = produit.ProduitPromotions.Where(pp => pp.Promotion.DateDebut <= DateTime.Now && pp.Promotion.DateFin >= DateTime.Now).ToList();
+                    var prix = produit.Prix;
+                    var stylePrix = ";";
+                    if (promotionEnVigueur != null && promotionEnVigueur.Count > 0)
+                    {
+                        stylePrix = "color: red;font-weight: bold;";
+                        prix = prix * (1 - (decimal)promotionEnVigueur.First().Promotion.Remise / 100);
+                    }
+                    <tr>
+
+
+                        <td>
+                            @if (SignInManager.IsSignedIn(User) && User.IsInRole("Administrateur"))
+                            {
+                                <a asp-area="" asp-controller="Home" asp-action="ProduitForm" asp-route-id="@produit.ProduitID">@produit.Libelle</a>
+                            }
+                            else
+                            {
+                                @produit.Libelle
+                            }
+                        </td>
+                        <td><pre>@produit.Description</pre></td>
+                        <td style="@stylePrix">@prix.ToString("C2")</td>
+                        <td>@produit.Categorie</td>
+                        @if (SignInManager.IsSignedIn(User) && User.IsInRole("Administrateur"))
+                        {
+                            <td><a asp-area="" asp-controller="Home" asp-action="ListePromotions" asp-route-id="@produit.ProduitID">Gérer les promotions</a></td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

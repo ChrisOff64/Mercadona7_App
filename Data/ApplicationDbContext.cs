@@ -10,7 +10,7 @@ namespace Mercadona7_App.Data
     public class ApplicationDbContext : IdentityDbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
+            :       base(options)
         {
         }
         public DbSet<Produit> Produits { get; set; }

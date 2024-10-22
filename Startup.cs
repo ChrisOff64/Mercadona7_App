@@ -35,7 +35,10 @@ namespace Mercadona7_App
             //        Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddDbContext<ApplicationDbContext>(context =>
-                context.UseLazyLoadingProxies().UseNpgsql(Configuration.GetConnectionString("Mercadona_DB"))
+                context.UseLazyLoadingProxies().UseSqlServer(Configuration.GetConnectionString("Mercadona_DB"))    
+            //context.UseLazyLoadingProxies().UseNpgsql(Configuration.GetConnectionString("Mercadona_DB"))
+
+                
             );
 
 

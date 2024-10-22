@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Mercadona7_App.Models
 {
@@ -15,6 +16,7 @@ namespace Mercadona7_App.Models
         public string? Description { get; set; }
         [Display(Name = "Prix")]
         [Required(ErrorMessage = "Le prix est un champ obligatoire")]
+        [Column(TypeName = "decimal(18,4)")]
         public Decimal Prix { get; set; }
         public string? Image { get; set; }
         [Display(Name = "Catégorie")]

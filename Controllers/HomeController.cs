@@ -144,7 +144,7 @@ namespace Mercadona7_App.Controllers
             ,Prix=34.90m}
         };
 
-        public static ApplicationDbContext _db { get; set; }
+        public static ApplicationDbContext? _db { get; set; }
         public HomeController(ApplicationDbContext db)
         {
             _db = db;

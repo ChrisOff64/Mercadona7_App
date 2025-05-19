@@ -1,7 +1,7 @@
-﻿@model Produit
+﻿@model ProduitViewModel
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
-    ViewData["Title"] = (Model == null ? "Nouveau produit" : "Détail du produit " + Model.Libelle);
+    ViewData["Title"] = (Model.Produit == null ? "Nouveau produit" : "Détail du produit " + Model.Produit.Libelle);
 
 }
 
@@ -9,48 +9,102 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <title>Formulaire</title>
 </head>
 <body>
 
     <div class="text-center">
         <h1 class="display-5">Mercadona</h1>
-        <p>@(Model == null ? "Nouveau produit" : "Détail du produit " + Model.Libelle)</p>
+        <p>@(Model.Produit == null ? "Nouveau produit" : "Détail du produit " + Model.Produit.Libelle)</p>
         <hr />
     </div>
 
-    <form asp-action="ProduitForm" method="post" class="m-2">
-        <input type="hidden" asp-for="ProduitID" readonly class="form-control" value=@(Model==null ? 0 :@Model.ProduitID) />
+    <form asp-action="ProduitForm" method="post" class="m-2" enctype="multipart/form-data">
+        <input type="hidden" asp-for="Produit.ProduitID" readonly class="form-control" value=@(Model==null || Model.Produit==null ? 0 :@Model.Produit.ProduitID) />
+        <input type="hidden" asp-for="Produit.Image" readonly class="form-control" value=@(Model==null || Model.Produit==null ? "" :@Model.Produit.Image) />
         <div class="form-group">
-            @Html.LabelFor(m => m.Libelle)
-            @Html.TextBoxFor(m => m.Libelle,new { @class = "form-control"})
-            @Html.ValidationMessageFor(m => m.Libelle, "", new { @class = "text-danger" })
+            @Html.LabelFor(m => m.Produit.Libelle)
+            @Html.TextBoxFor(m => m.Produit.Libelle,new { @class = "form-control"})
+            @Html.ValidationMessageFor(m => m.Produit.Libelle, "", new { @class = "text-danger" })
         </div>
         
         <div class="form-group">
-            @Html.LabelFor(m => m.Description)
-            @Html.TextAreaFor(m => m.Description, new { @class = "form-control", @rows="5" })
+            @Html.LabelFor(m => m.Produit.Description)
+            @Html.TextAreaFor(m => m.Produit.Description, new { @class = "form-control", @rows="5" })
             
         </div>
         <div class="form-group">
             
-            @Html.LabelFor(m => m.Prix)
-            <input type="number" asp-for="Prix" class="form-control" value=@(Model==null ? "" : Model.Prix.ToString("F").Replace(",",".")) />
+            @Html.LabelFor(m => m.Produit.Prix)
+            <input type="number" asp-for="Produit.Prix" class="form-control" value=@(Model==null || Model.Produit==null? "" : Model.Produit.Prix.ToString("F").Replace(",",".")) />
             
-            @Html.ValidationMessageFor(m => m.Prix, "", new { @class = "text-danger" })
+            @Html.ValidationMessageFor(m => m.Produit.Prix, "", new { @class = "text-danger" })
             
         </div>
         <div class="form-group">
 
-            @Html.LabelFor(m => m.Categorie)
-            @Html.TextBoxFor(m => m.Categorie,new { @class = "form-control"})
-            @Html.ValidationMessageFor(m => m.Categorie, "", new { @class = "text-danger" })
+            @Html.LabelFor(m => m.Produit.Categorie)
+            @Html.TextBoxFor(m => m.Produit.Categorie,new { @class = "form-control"})
+            @Html.ValidationMessageFor(m => m.Produit.Categorie, "", new { @class = "text-danger" })
             
         </div>
+        @if (Model.Produit!=null && !string.IsNullOrWhiteSpace(Model.Produit.Image))
+        {
+            <div class="card">
+                <div class="card-header text-dark">
+                    Image
+                </div>
+                <div class="card-body">
+					<img src=@Model.Produit.Image class="img-thumbnail" />
+                    <button asp-action="SupprimerImage" type="submit" onclick="return confirm('Confirmez-vous la suppression de l'image de ce produit ?')">Supprimer Image</button>
+                </div>
+                
+            </div>
+            
+        
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-header text-dark">
+                    Envoyer une image
+                </div>
+                <div class="card-body">
 
+
+
+
+					<div class="inpute-group mb-3">
+						<input type="file" class="form-control" id="inputGroupFile02" asp-for="Upload">
+						
+					</div>
+
+
+					<button asp-action="EnvoiImage" type="submit">Envoyer</button>
+
+					<!--<label class="inpute-group-text" for="inputGroupFile02">Upload</label>
+					<div class="custom-file">
+						<input type="file" class="custom-file-input" asp-for="Upload">
+						<label class="custom-file-label">Choose image</label>
+					</div>
+					<button asp-action="EnvoiImage" type="submit" class="btn btn-secondary">Upload</button>  
+                    <form method="post" enctype="multipart/form-data">
+
+                    </form>
+                    -->
+                </div>
+            </div>
+        }
         <button type="submit">Enregistrer le produit</button>
+        @if (Model.Produit != null && Model.Produit.ProduitID != 0)
+        {
+            <button asp-action="SupprimeProduit" type="submit" onclick="return confirm('Confirmez-vous la suppression de ce produit ?')">Supprimer le produit</button>
+        }
+
     </form>
     <div asp-validation-summary="All"></div>
+
 </body>
 
 </html>

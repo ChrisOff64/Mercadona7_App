@@ -1,0 +1,232 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Mercadona7_App.Data;
+using Mercadona7_App.Models;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
+
+namespace Mercadona7_App.Controllers
+{
+    public class Categorie
+    {
+        public string? Libelle { get; set; }
+    }
+    //pattern: "{controller=Home}/{action=Index}/{id?}"
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProduitsController : ControllerBase
+    {
+        private readonly ApplicationDbContext _context;
+
+        public ProduitsController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: api/Produits
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Produit>>> GetProduits(string categorie = "")
+        {
+          if (_context.Produits == null)
+          {
+              return NotFound();
+          }
+
+            if (string.IsNullOrWhiteSpace(categorie))
+            {
+                return await _context.Produits.ToListAsync();
+
+            }
+            return await _context.Produits.Where(produit => produit.Categorie == categorie)
+                                          .ToListAsync();
+        }
+
+        [HttpGet]
+        [Route("ListeCategories")]
+
+        public async Task<ActionResult<IEnumerable<Categorie>>> ListeCategories()
+        {
+
+
+            return await _context.Produits.GroupBy(produit => produit.Categorie)
+                                            .OrderBy(produit => produit.Key)
+                                            .Select(produit =>
+                                                        new Categorie
+                                                        {
+                                                            Libelle = produit.Key,
+                                                        })
+                                            .ToListAsync();
+
+        }
+
+        //       private async Task<BlobContainerClient> GetCloudBlobContainer(string containerName)
+        //       {
+        //           BlobServiceClient serviceClient = new BlobServiceClient(_options.StorageConnectionString);
+        //           BlobContainerClient containerClient = serviceClient.GetBlobContainerClient(containerName);
+        //           await containerClient.CreateIfNotExistsAsync();
+        //           return containerClient;
+        //       }
+
+        //        [Route("Image")]
+        //        [HttpGet]
+        //        public async Task<ActionResult<IEnumerable<string>>> Get()
+        //        {
+        //            BlobContainerClient containerClient = await GetCloudBlobContainer(_options.FullImageContainerName);
+        //
+        //            BlobClient blobClient;
+        //            BlobSasBuilder blobSasBuilder;
+        //
+        //            List<string> results = new List<string>();
+        //            await foreach (BlobItem blobItem in containerClient.GetBlobsAsync())
+        //            {
+        //
+        //                blobClient = containerClient.GetBlobClient(blobItem.Name);
+        //                blobSasBuilder = new BlobSasBuilder()
+        //                {
+        //                    BlobContainerName = _options.FullImageContainerName,
+        //                    BlobName = blobItem.Name,
+        //                    ExpiresOn = DateTime.UtcNow.AddMinutes(5),//Let SAS token expire after 5 minutes.
+        //                    Protocol = SasProtocol.Https
+        //                };
+        //                blobSasBuilder.SetPermissions(BlobSasPermissions.Read);
+        //
+        //
+        //                results.Add(blobClient.GenerateSasUri(blobSasBuilder).AbsoluteUri);
+        //
+        //            }
+        //            Console.Out.WriteLine("Got Images");
+        //            return Ok(results);
+        //        }
+        //
+        //        [Route("/")]
+        //        [HttpPost]
+        //        public async Task<ActionResult> Post()
+        //        {
+        //            Stream image = Request.Body;
+        //            BlobContainerClient containerClient = await GetCloudBlobContainer(_options.FullImageContainerName);
+        //            string blobName = Guid.NewGuid().ToString().ToLower().Replace("-", String.Empty);
+        //            BlobClient blobClient = containerClient.GetBlobClient(blobName);
+        //            await blobClient.UploadAsync(image);
+        //            return Created(blobClient.Uri, null);
+        //        }
+        //
+
+
+
+        // GET: api/Produits/5
+        [HttpGet("Image/{id}")]
+        public async Task<ActionResult<string>> GetProduitImg(int id)
+        {
+            if (_context.Produits == null)
+            {
+                return NotFound();
+            }
+            var produit = await _context.Produits.FindAsync(id);
+            //var produit = await _context.Produits.Where(c => c.ProduitID.Equals(id)).FirstOrDefaultAsync();
+            if (produit == null)
+            {
+                return NotFound();
+            }
+
+            return produit.Image;
+        }
+
+
+
+
+        // GET: api/Produits/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Produit>> GetProduit(int id)
+        {
+          if (_context.Produits == null)
+          {
+              return NotFound();
+          }
+            var produit = await _context.Produits.FindAsync(id);
+            //var produit = await _context.Produits.Where(c => c.ProduitID.Equals(id)).FirstOrDefaultAsync();
+            if (produit == null)
+            {
+                return NotFound();
+            }
+
+            return produit;
+        }
+
+        // PUT: api/Produits/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutProduit(int id, Produit produit)
+        {
+            if (id != produit.ProduitID)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(produit).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProduitExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/Produits
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<Produit>> PostProduit(Produit produit)
+        {
+          if (_context.Produits == null)
+          {
+              return Problem("Entity set 'ApplicationDbContext.Produits'  is null.");
+          }
+            _context.Produits.Add(produit);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetProduit", new { id = produit.ProduitID }, produit);
+        }
+
+        // DELETE: api/Produits/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProduit(int id)
+        {
+            if (_context.Produits == null)
+            {
+                return NotFound();
+            }
+            var produit = await _context.Produits.FindAsync(id);
+            if (produit == null)
+            {
+                return NotFound();
+            }
+
+            _context.Produits.Remove(produit);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool ProduitExists(int id)
+        {
+            return (_context.Produits?.Any(e => e.ProduitID == id)).GetValueOrDefault();
+        }
+    }
+}

@@ -15,6 +15,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Azure;
+using Azure.Storage.Queues;
+using Azure.Storage.Blobs;
+using Azure.Core.Extensions;
+
 
 namespace Mercadona7_App
 {
@@ -35,17 +40,23 @@ namespace Mercadona7_App
             //        Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddDbContext<ApplicationDbContext>(context =>
-                context.UseLazyLoadingProxies().UseSqlServer(Configuration.GetConnectionString("Mercadona_DB"))    
+                context.UseLazyLoadingProxies().UseSqlServer(Configuration.GetConnectionString("Mercadona_DB"),
             //context.UseLazyLoadingProxies().UseNpgsql(Configuration.GetConnectionString("Mercadona_DB"))
-
-                
+               sqlServerOptionsAction: sqlOptions =>
+               {
+                   sqlOptions.EnableRetryOnFailure(
+                   maxRetryCount: 5,
+                   maxRetryDelay: TimeSpan.FromSeconds(60),
+                   errorNumbersToAdd: null);
+               }
+               )
             );
 
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
-           
 
+    
 
 
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
@@ -55,6 +66,8 @@ namespace Mercadona7_App
 
             //services.AddScoped<IDbInitializer, DbInitializer>();
             services.AddControllersWithViews();
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

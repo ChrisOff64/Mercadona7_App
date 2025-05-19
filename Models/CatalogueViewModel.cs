@@ -5,8 +5,8 @@ namespace Mercadona7_App.Models
 {
     public class CatalogueViewModel
     {
-            public List<Produit> Produits { get; set; }
-            public List<SelectListItem> ListeCategories { get; set; }
+            public List<ProduitCatalogue> Produits { get; set; }
+            public IEnumerable<SelectListItem> ListeCategories { get; set; }
         
             public string CategorieSelectionnee { get; set; }
          public CatalogueViewModel(string categorieSelectionnee="")

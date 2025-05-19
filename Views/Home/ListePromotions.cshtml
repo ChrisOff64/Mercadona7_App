@@ -1,8 +1,8 @@
-﻿@model PromotionsViewModel
+﻿@model ListePromotionsViewModel
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @{
-    ViewData["Title"] = "Liste des promotions " + (Model.ProduitID != 0 ? " affectées au produit " + Model.ProduitID : "");
+    ViewData["Title"] = "Liste des promotions " + (Model.ProduitID != 0 ? " affectées au produit '" + Model.Libelle +"'": "");
 
 }
 <div class="text-center">
@@ -18,18 +18,19 @@
             <button type="submit">Enregistrer les promotions sur le produit</button>
         </div>
         <div>
-            <a asp-controller="Home" asp-action="PromotionForm">Ajouter une promotion</a>
+            <a asp-controller="Home" asp-action="CreationPromotionProduit" asp-route-ProduitId="@Model.ProduitID">Ajouter une promotion</a>
 
         </div>
     </div>
 
-    <input type="hidden" asp-for="@Model.ProduitID" readonly class="form-control" />
+    <input type="hidden" asp-for="@Model.ProduitID" readonly class="form-control" value=@Model.ProduitID/>
         <table class="table table-striped">
             <thead>
                 <tr>
                     <th scope="col"></th>
                     <th scope="col">Période</th>
                     <th scope="col">Remise</th>
+                    <th scope="col"></th>
                 </tr>
             </thead>
             <tbody>
@@ -40,8 +41,9 @@
                 <tr>
 
                     <td><input type="checkbox" asp-for="@Model.PromotionsProduit[i].Affectee" /></td>
-                    <td><a asp-area="" asp-controller="Home" asp-action="PromotionForm" asp-route-id="@Model.PromotionsProduit[i].Promotion.PromotionID">du @Model.PromotionsProduit[i].Promotion.DateDebut.ToString("dd MMM yyyy") au @Model.PromotionsProduit[i].Promotion.DateFin.ToString("dd MMM yyyy")</a></td>
-                    <td>@Model.PromotionsProduit[i].Promotion.Remise.ToString("G") %</td>
+                    <td><a asp-area="" asp-controller="Home" asp-action="PromotionForm" asp-route-ProduitId="@Model.ProduitID"  asp-route-id="@Model.PromotionsProduit[i].Promotion.PromotionID">du @(((DateTime)Model.PromotionsProduit[i].Promotion.DateDebut).ToString("dd MMM yyyy")) au @(((DateTime)Model.PromotionsProduit[i].Promotion.DateFin).ToString("dd MMM yyyy"))</a></td>
+					<td>@(((float)Model.PromotionsProduit[i].Promotion.Remise).ToString("G"))  %</td>
+
                     <td><input type="hidden" asp-for="@Model.PromotionsProduit[i].Promotion.PromotionID" class="form-control" /></td>
                 </tr>
             }

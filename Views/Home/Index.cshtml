@@ -1,7 +1,4 @@
-﻿@model IdentityUser
-@using Microsoft.AspNetCore.Identity
-
-@{
+﻿@{
     ViewData["Title"] = "Page d'accueil";
 }
 
@@ -12,21 +9,67 @@
 </div>
 <div class="text-center">
 	
-	@if (Model == null)
-    {
-        <div class="alert alert-warning">
-            <p>L'utilisateur avec un role d'administrateur n'a pas été créé</p>
-            <a class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hoverk" href="Identity/Account/Register/Administrateur">Créer l'utilisateur Administrateur</a>
-        </div>
-    }
-    else
-    {
+    
+    <div id="Attente"class="alert alert-warning">
+        <p>En attente de connexion à la base de données</p>
+        <img src="~/img/attente.gif" />
+    </div>
+    <div id="AdminInexistant" style="display:none;" class="alert alert-warning">
+        <p><b>Mode démonstration</b></p>
+        <p>L'utilisateur avec un role d'administrateur n'a pas été créé</p>
+        <a class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hoverk" href="Identity/Account/Register/Administrateur">Créer l'utilisateur Administrateur</a>
+    </div>
 
-        <div class="alert alert-primary">
+    <div id="AdminPresent" style="display:none;" class="alert alert-primary">
+        <p><b>Mode démonstration</b></p>
+        <p>L'utilisateur avec un rôle d'administrateur est <span id="eMailAdmin"></span></p>
+    </div>
 
-            <p>L'utilisateur avec un rôle d'administrateur est @Model.Email</p>
-        </div>
 
-    }
 </div>
+
+@section scripts {
+    <script type="text/javascript">
+        window.onload = function () {
+            // Enregistrer le temps de départ
+            const startTime = Date.now();
+
+
+            $.ajax({
+                url: "/Home/UtilisateurAdmin",
+                method: "GET",
+                timeout: 600000,
+                success: function (data) {
+                    document.getElementById("Attente").style.display = "none";
+                    
+                    if ((data) == null) {
+                        document.getElementById("AdminInexistant").style.display = "block";
+                    }
+                    else {
+                        var AdminPresent = document.getElementById("AdminPresent");
+                        $('#eMailAdmin').text(data.email);
+                        AdminPresent.style.display = "block";
+
+                    }
+                    
+                    
+                },
+                fail: function (data) {
+                    window.location.reload();
+                },
+                error: function (jqXHR, exception) {
+                    window.location.reload();
+                }
+            })
+            // Enregistrer le temps d'arrivée
+            const endTime = Date.now();
+
+            // Calculer le temps écoulé en millisecondes
+            const elapsedTime = endTime - startTime;
+
+            console.log(`Le temps écoulé est de ${elapsedTime} ms`);
+
+        };
+    </script>
+}
 

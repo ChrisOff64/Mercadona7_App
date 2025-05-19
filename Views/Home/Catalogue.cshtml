@@ -1,13 +1,14 @@
 ﻿@model CatalogueViewModel
 @using Microsoft.AspNetCore.Identity
+@using System.Globalization;
 @inject SignInManager<IdentityUser> SignInManager
 @{
     ViewData["Title"] = "Catalogue";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Mercadona</h1>
-    <p>Liste des produits</p>
+    <h1 class="display-4">Liste des produits</h1>
+    
     <hr />
 </div>
 <div class="m-2">
@@ -39,9 +40,10 @@
                 }
             </div>
         </div>
-        <table class="table table-striped">
-            <thead>
+        <table class="table">
+            <thead class="thead-dark">
                 <tr>
+                    <th scope="col"></th>
                     <th scope="col">Nom du produit</th>
                     <th scope="col">Description</th>
                     <th scope="col">Prix</th>
@@ -53,35 +55,54 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (Produit produit in Model.Produits)
+                @foreach (ProduitCatalogue p in Model.Produits)
                 {
-                    var promotionEnVigueur = produit.ProduitPromotions.Where(pp => pp.Promotion.DateDebut <= DateTime.Now && pp.Promotion.DateFin >= DateTime.Now).ToList();
-                    var prix = produit.Prix;
+                    var promotionEnVigueur = p.RemiseEnVigueur;
+                    var prix = p.Produit.Prix;
+                    var baliseImage = "";
+                    if (p.Produit.Image != null)
+                    {
+                        baliseImage = "<img src = " + p.Produit.Image + " height=50 width=50 alt='" + p.Produit.Libelle + "'>";
+                    }
                     var stylePrix = ";";
-                    if (promotionEnVigueur != null && promotionEnVigueur.Count > 0)
+                    if (promotionEnVigueur != null && promotionEnVigueur > 0)
                     {
                         stylePrix = "color: red;font-weight: bold;";
-                        prix = prix * (1 - (decimal)promotionEnVigueur.First().Promotion.Remise / 100);
+                        prix = prix * (1 - (decimal)promotionEnVigueur / 100);
                     }
                     <tr>
-
 
                         <td>
                             @if (SignInManager.IsSignedIn(User) && User.IsInRole("Administrateur"))
                             {
-                                <a asp-area="" asp-controller="Home" asp-action="ProduitForm" asp-route-id="@produit.ProduitID">@produit.Libelle</a>
+                                <a asp-area="" asp-controller="Home" asp-action="ProduitForm" asp-route-id="@p.Produit.ProduitID">@Html.Raw(baliseImage)</a>
                             }
                             else
                             {
-                                @produit.Libelle
+                                @Html.Raw(baliseImage)
+                            }
+
+                            
+
+                            
+
+                        </td>
+                        <td>
+                            @if (SignInManager.IsSignedIn(User) && User.IsInRole("Administrateur"))
+                            {
+                                <a asp-area="" asp-controller="Home" asp-action="ProduitForm" asp-route-id="@p.Produit.ProduitID">@p.Produit.Libelle</a>
+                            }
+                            else
+                            {
+                                @p.Produit.Libelle
                             }
                         </td>
-                        <td><pre>@produit.Description</pre></td>
-                        <td style="@stylePrix">@prix.ToString("C2")</td>
-                        <td>@produit.Categorie</td>
+                        <td><pre>@p.Produit.Description</pre></td>
+                        <td style="@stylePrix">@prix.ToString("C2",CultureInfo.CreateSpecificCulture("fr-FR"))</td>
+                        <td>@p.Produit.Categorie</td>
                         @if (SignInManager.IsSignedIn(User) && User.IsInRole("Administrateur"))
                         {
-                            <td><a asp-area="" asp-controller="Home" asp-action="ListePromotions" asp-route-id="@produit.ProduitID">Gérer les promotions</a></td>
+                            <td><a asp-area="" asp-controller="Home" asp-action="ListePromotions" asp-route-produitID="@p.Produit.ProduitID">Gérer les promotions</a></td>
                         }
                     </tr>
                 }

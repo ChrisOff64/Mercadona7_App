@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Mercadona7_App.Models
 {
-    public class PromotionsViewModel
+    public class ListePromotionsViewModel
     {
         public class PromotionProduit
         {
@@ -14,12 +14,14 @@ namespace Mercadona7_App.Models
         public List<PromotionProduit> PromotionsProduit { get; set; }
       
         public int ProduitID { get; set; }
-       
-        public PromotionsViewModel(int produitID = 0)
+        public string ? Libelle { get; set; }
+
+        public ListePromotionsViewModel(int produitID = 0)
         {
             ProduitID = produitID;
+            
         }
-        public PromotionsViewModel()
+        public ListePromotionsViewModel()
         {
             
         }

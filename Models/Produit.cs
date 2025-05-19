@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Mercadona7_App.Models
 {
@@ -24,7 +25,10 @@ namespace Mercadona7_App.Models
         [MaxLength(30)] 
         public string? Categorie { get; set; }
 
-        
-        public virtual ICollection<ProduitPromotion> ProduitPromotions { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<ProduitPromotion>? ProduitPromotions { get; set; }
     }
+
+     
+
 }

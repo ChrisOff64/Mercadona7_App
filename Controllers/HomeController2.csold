@@ -1,7 +1,5 @@
 ﻿//using Castle.Core.Internal;
 using Azure;
-using Azure.Storage.Blobs.Models;
-using Azure.Storage.Blobs;
 using Mercadona7_App.Data;
 using Mercadona7_App.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -22,14 +20,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Formatting;
-using System.Security.Policy;
 using System.Threading.Tasks;
 
 
-using static Mercadona7_App.Models.ListePromotionsViewModel;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Diagnostics.Metrics;
-using System.Text;
+using static Mercadona7_App.Models.PromotionsViewModel;
+
 
 namespace Mercadona7_App.Controllers
 
@@ -39,8 +34,7 @@ namespace Mercadona7_App.Controllers
     {
         private readonly ILogger<HomeController>? _logger;
         public static ApplicationDbContext? _db { get; set; }
-        private IProduitDepot _depot;
-
+        private HttpClient? _httpClient;
         //public HomeController(ILogger<HomeController> logger)
         //{
         //    _logger = logger;
@@ -106,7 +100,7 @@ namespace Mercadona7_App.Controllers
             new Produit{Libelle="Support de perçage avec colonne ronde Wolfcraft"
             ,Categorie="Outillage"
             ,Description="Support de perçage avec colonne ronde Wolfcraft, accessoire idéal pour vos perçages.\nDiamètre de coupe: 43 mm"
-            ,Image="support-de-percage-avec-colonne-ronde-wolfcrafti.webp"
+            ,Image="support-de-meuleuse-wolfcraft-115-125-mm.webp"
             ,Prix=34.95m},
             new Produit{Libelle="Support de meuleuse Wolfcraft Ø115/125 mm"
             ,Categorie="Outillage"
@@ -186,44 +180,18 @@ namespace Mercadona7_App.Controllers
         };
 
 
-        public HomeController(ApplicationDbContext db,IProduitDepot depot)
+
+        public HomeController(ApplicationDbContext db, HttpClient httpClient)
         {
             _db = db;
-            _depot = depot;
+            _httpClient = httpClient;
         }
-
 
 
         [AllowAnonymous]
            
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-
-            
-
-
-
-            //var userAdministrateur = (from user in _db.Users
-            //                    join userRole in _db.UserRoles
-            //                    on user.Id equals userRole.UserId
-            //                    join role in _db.Roles
-            //                    on userRole.RoleId equals role.Id
-            //                    where role.Name == "Administrateur"
-            //                            select user)
-            //                    .FirstOrDefault();
-            //
-            //return View(userAdministrateur);
-            return View();
-            
-        }
-
-        [AllowAnonymous]
-        public JsonResult UtilisateurAdmin()
-
-
-        {
-
-
 
             var userAdministrateur = (from user in _db.Users
                                 join userRole in _db.UserRoles
@@ -234,13 +202,11 @@ namespace Mercadona7_App.Controllers
                                         select user)
                                 .FirstOrDefault();
             
-            //return View(userAdministrateur);
-
-            if (userAdministrateur != null)
-                return new JsonResult(new {userAdministrateur.Email});
-            else
-                return new JsonResult(null);
+            return View(userAdministrateur);
+            //return View();
         }
+
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
@@ -251,14 +217,12 @@ namespace Mercadona7_App.Controllers
         [HttpGet]
         public async Task<IActionResult> Catalogue(string id)
         {
-
-            
             return View(await RenvoiProduitsAsync(id));
         }
-
-        public async Task<IActionResult> ListePromotions(int produitID = 0)
+        
+        public async Task<IActionResult> ListePromotions(int id=0)
         {
-            return View(await RenvoiPromotionsAsync(produitID));
+            return View(await RenvoiPromotionsAsync(id));
 
         }
 
@@ -271,190 +235,52 @@ namespace Mercadona7_App.Controllers
         
         public async Task<IActionResult>ProduitForm(int id)
         {
+            Produit p = _db.Produits.FirstOrDefault(p => p.ProduitID == id);
 
 
-            ProduitViewModel pvm= new ProduitViewModel();
 
-            //Produit p = _db.Produits.FirstOrDefault(p => p.ProduitID == id);
-            pvm.Produit = await _depot.RenvoiProduitAsync(id);
-
-
-            return View(pvm);
+            return View(p);
         }
         
-        public IActionResult PromotionForm(int ProduitId, int id)
+        public IActionResult PromotionForm(int id)
         {
             if (id != 0)
             {
-                PromotionViewModel pvm= new PromotionViewModel();
-                pvm.Promotion = _db.Promotions.FirstOrDefault(p => p.PromotionID == id);
-                pvm.ProduitID = ProduitId;
+                Promotion p = _db.Promotions.FirstOrDefault(p => p.PromotionID == id);
 
 
-                return View(pvm);
+
+                return View(p);
             }
             else
                 return View();
 
 
         }
-        public async Task<CatalogueViewModel> RenvoiProduitsAsync(string categorie)
-        {
-
-            var vm = new CatalogueViewModel(categorie);
-
-
-
-
-            vm.Produits = (List<ProduitCatalogue>)await _depot.ListeProduitsAsync(categorie);
-
-
-
-            vm.ListeCategories = _depot.RequeteListeCategories().AsEnumerable().ToList().Select(a =>
-                                                      new SelectListItem
-                                                      {
-                                                          Value = a.Libelle,
-                                                          Text = a.Libelle,
-                                                          Selected = a.Libelle == categorie
-                                                      })
-                                                 .ToList();
-
-
-
-
-            return vm;
-        }
-
-        public async Task<ListePromotionsViewModel> RenvoiPromotionsAsync(int produitID)
-        {
-            var vm = new ListePromotionsViewModel(produitID);
-            if (produitID !=0)
-            {
-
-                Produit ? p = _db.Produits.FirstOrDefault(p => p.ProduitID == produitID);
-                if (p != null) vm.Libelle = p.Libelle;
-            }
-            vm.PromotionsProduit = await _db.Promotions.OrderBy(promotion => promotion.DateDebut).Select(a =>
-                                          new ListePromotionsViewModel.PromotionProduit
-                                          {
-                                              Promotion = a,
-                                              Affectee = a.ProduitPromotions.Where(x => x.ProduitID == produitID).Any()
-                                          })
-                                     .ToListAsync();
-
-            return vm;
-        }
-
-
-
-        public IActionResult CreationPromotionProduit(int ProduitId)
-        {
-            PromotionViewModel pvm = new PromotionViewModel();
-            pvm.ProduitID = ProduitId;
-            pvm.ModeCreation = true;
-            //p.ProduitPromotions[0].Produit.ProduitID = null;
-
-            return View("PromotionForm", pvm);
-
-        }
         [HttpPost]
-        public async Task<IActionResult> ProduitForm(ProduitViewModel pvm)
+        public IActionResult ProduitForm(Produit produit)
         {
-            
-            if (ModelState.IsValid && pvm.Produit!=null){
-                bool resultatOk=false;
-                if (pvm.Produit.ProduitID==0)
-                    resultatOk = await _depot.AjouteProduitAsync(pvm.Produit);
-                else
-                    resultatOk = await _depot.ModifieProduitAsync(pvm.Produit);
-                //_db.Produits.Update(produit);
-                //_db.SaveChanges();
-                if (resultatOk) return 
-                        RedirectToAction("Catalogue");
+            if (ModelState.IsValid){
+                _db.Produits.Update(produit);
+                _db.SaveChanges();
+                return RedirectToAction("Catalogue");
             }
             return View();
 
-
-
-            //###########################################
-            //if (ModelState.IsValid){
-            //    _db.Produits.Update(produit);
-            //    _db.SaveChanges();
-            //    return RedirectToAction("Catalogue");
-            //}
-            //return View();
-
         }
-        public async Task<IActionResult> EnvoiImage(ProduitViewModel pvm)
-        {
-            if (pvm.Upload != null && pvm.Upload.Length > 0)
-            {
-
-                string nomFichier = await _depot.UpLoadImage(pvm.Upload, pvm.Produit.Libelle);
-                if (!string.IsNullOrEmpty(nomFichier))
-                {
-                    pvm.Produit.Image = nomFichier;
-                    
-                }
-            }
-            return View("ProduitForm", pvm);
-        }
-        public async Task<IActionResult> SupprimerImage(ProduitViewModel pvm)
-        {
-            pvm.Produit.Image = null;
-            return View("ProduitForm", pvm);
-        }
-
         [HttpPost]
-        public IActionResult PromotionForm(PromotionViewModel pvm)
+        public IActionResult PromotionForm(Promotion promotion)
         {
             if(ModelState.IsValid) {
-                
-                _db.Promotions.Update(pvm.Promotion);
+
+                _db.Promotions.Update(promotion);
                 _db.SaveChanges();
-                if (pvm.ModeCreation &&  pvm.ProduitID!=0)
-                {
-                    ProduitPromotion pp=new ProduitPromotion();
-                    pp.PromotionID = pvm.Promotion.PromotionID;
-                    pp.ProduitID = pvm.ProduitID;
-                    
-                    _db.ProduitPromotions.Add(pp);
-                    _db.SaveChanges();
-                }
-                
-                return RedirectToAction("ListePromotions", new { ProduitID = pvm.ProduitID } );
+                return RedirectToAction("ListePromotions");
             }
-            return View(pvm);
+            return View();
         }
         [HttpPost]
-        public IActionResult SupprimePromotion(PromotionViewModel pvm)
-        {
-            Promotion ? promo = _db.Promotions.FirstOrDefault(p => p.PromotionID == pvm.Promotion.PromotionID);
-
-            if (promo!=null) { 
-                if (promo.ProduitPromotions != null)
-                {
-                    _db.ProduitPromotions.RemoveRange(promo.ProduitPromotions);
-                }
-
-                _db.Promotions.Remove(promo);
-                _db.SaveChanges();
-			}
-			return RedirectToAction("ListePromotions", new { ProduitID = pvm.ProduitID });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> SupprimeProduit(Produit pvm)
-        {
-
-            await _depot.SupprimeProduitAsync(pvm.ProduitID);
-
-            return RedirectToAction("Catalogue");
-        }
-
-
-        [HttpPost]
-        public IActionResult ListePromotions(ListePromotionsViewModel pvm)
+        public IActionResult ListePromotions(PromotionsViewModel pvm)
         {
 
 
@@ -466,7 +292,7 @@ namespace Mercadona7_App.Controllers
            
            
 
-            foreach (ListePromotionsViewModel.PromotionProduit promotionProduit in pvm.PromotionsProduit)
+            foreach (PromotionsViewModel.PromotionProduit promotionProduit in pvm.PromotionsProduit)
             {
 
                 if (promotionProduit.Affectee)
@@ -491,6 +317,54 @@ namespace Mercadona7_App.Controllers
         }
 
         //public async Task<List<Produit>> RenvoiProduitsAsync(string categorie)
+        public async Task<CatalogueViewModel> RenvoiProduitsAsync(string categorie)
+        {
+
+            var vm = new CatalogueViewModel(categorie);
+
+
+
+
+
+
+            if (string.IsNullOrWhiteSpace(categorie))
+                vm.Produits = await _db.Produits.ToListAsync();
+            else
+                vm.Produits = await _db.Produits.Where(x => x.Categorie == categorie).ToListAsync();
+
+
+            vm.ListeCategories = _db.Produits.GroupBy(produit => produit.Categorie)
+                                                .OrderBy(produit => produit.Key)
+                                                .Select(a =>
+                                                      new SelectListItem
+                                                      {
+                                                          Value = a.Key,
+                                                          Text = a.Key,
+                                                          Selected = a.Key== categorie
+                                                      })
+                                                 .ToList();
+
+
+
+
+            return vm;
+        }
+
+        public async Task<PromotionsViewModel> RenvoiPromotionsAsync(int produitID)
+        {
+            var vm = new PromotionsViewModel(produitID);
+            vm.PromotionsProduit = await _db.Promotions.OrderBy(promotion=> promotion.DateDebut).Select(a =>
+                                          new PromotionsViewModel.PromotionProduit
+                                          {
+                                              Promotion = a,
+                                              Affectee = a.ProduitPromotions.Where(x=>x.ProduitID==produitID).Any()
+                                          })
+                                     .ToListAsync();
+
+            return vm;
+        }
+
+
 
     }
 }
